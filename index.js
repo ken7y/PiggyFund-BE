@@ -61,7 +61,6 @@ app.get('/spending', (req, res) => {
       cursor.insertOne(requestJson);
     });
   }
-  client.close();
   res.send("done");
 })
 
