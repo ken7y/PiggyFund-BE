@@ -4,26 +4,37 @@ const port = 3000
 
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://test:test@cluster0.cbjkw.mongodb.net/PiggyFund?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true });
-
+const client = new MongoClient(uri, {
+  useNewUrlParser: true
+});
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
 app.get('/getall', (req, res) => {
-  client.connect(err => {
   let arr = [];
-  var cursor = client.db("PiggyFund").collection('Spendings').find();
-  cursor.each(function(err, item) {
-      if(item == null) {
-          client.close(); 
-          res.send(arr);
-          return;
+
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Spendings').find();
+    cursor.each(function (err, item) {
+      if (item == null) {
+        res.send(arr);
       }
       arr.push(item);
-  });
-  });
+    });
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Spendings').find();
+      cursor.each(function (err, item) {
+        if (item == null) {
+          res.send(arr);
+        }
+        arr.push(item);
+      });
+    })
+  };
+
 })
 
 
@@ -34,16 +45,23 @@ app.get('/spending', (req, res) => {
   var currency = req.query.currency ? req.query.currency : "Aud";
   var now = new Date();
   var isoString = now.toISOString();
-
-  client.connect(err => {
   let arr = [];
-  let requestJson = {"category": category, "amount" : amount, "currency" : currency, "Time": isoString}
-  var cursor = client.db("PiggyFund").collection('Spendings');
-
-  cursor.insertOne(requestJson);
-
-  });
-
+  let requestJson = {
+    "category": category,
+    "amount": amount,
+    "currency": currency,
+    "Time": isoString
+  }
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Spendings');
+    cursor.insertOne(requestJson);
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Spendings');
+      cursor.insertOne(requestJson);
+    });
+  }
+  client.close();
   res.send("done");
 })
 
