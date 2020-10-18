@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const port = 3000
+var cors = require('cors');
 
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://test:test@cluster0.cbjkw.mongodb.net/PiggyFund?retryWrites=true&w=majority";
@@ -8,13 +9,14 @@ const client = new MongoClient(uri, {
   useNewUrlParser: true
 });
 
+app.use(cors());
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
 app.get('/getall', (req, res) => {
   let arr = [];
-
   if (client.isConnected()) {
     var cursor = client.db("PiggyFund").collection('Spendings').find();
     cursor.each(function (err, item) {
@@ -63,6 +65,7 @@ app.get('/spending', (req, res) => {
   }
   res.send("done");
 })
+
 
 
 
