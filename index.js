@@ -49,9 +49,9 @@ app.get('/spending', (req, res) => {
   var isoString = now.toISOString();
   let arr = [];
   let requestJson = {
-    "category": category,
-    "amount": amount,
-    "currency": currency,
+    "Category": category,
+    "Amount": amount,
+    "Currency": currency,
     "Time": isoString
   }
   if (client.isConnected()) {
