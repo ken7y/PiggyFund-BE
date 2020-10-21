@@ -75,7 +75,7 @@ app.get('/spending', (req, res) => {
   var amount = req.query.amount ? req.query.amount : "0";
   var currency = req.query.currency ? req.query.currency : "Aud";
   var now = new Date();
-  var isoString = now.toISOString();
+  var isoString = req.query.time ? req.query.time : now.toISOString();
   let arr = [];
   let requestJson = {
     "Category": category,
@@ -106,14 +106,11 @@ app.get('/updateuser', (req, res) => {
   var requestID = req.query.objid;
   if (client.isConnected()) {
     var cursor = client.db("PiggyFund").collection('Users');
-    // cursor.findOneAndUpdate({"UserID": 1}, { $set: {"value": 15} });
     cursor.findOneAndUpdate({"UserID": parseInt(userID)}, { $push: {"Spendings": new ObjectId(requestID)} });
-
   } else {
     client.connect(err => {
       var cursor = client.db("PiggyFund").collection('Users');
       cursor.findOneAndUpdate({"UserID": parseInt(userID)}, { $push: {"Spendings": new ObjectId(requestID)} });
-      // cursor.findOneAndUpdate({"UserID": 1}, { $set: {"value": 15} });
     });
   }
   res.send("done");
