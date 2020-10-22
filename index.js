@@ -39,6 +39,68 @@ app.get('/getall', (req, res) => {
   };
 })
 
+
+app.get('/getallbudget', (req, res) => {
+  let arr = [];
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Budgets').find();
+    cursor.each(function (err, item) {
+      if (item == null) {
+        res.send(arr);
+      }
+      arr.push(item);
+    });
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Budgets').find();
+      cursor.each(function (err, item) {
+        if (item == null) {
+          res.send(arr);
+        }
+        arr.push(item);
+      });
+    })
+  };
+})
+
+
+app.get('/updatebudget', (req, res) => {
+  // http://localhost:3000/updatebudget?amount=100
+  var category = req.query.category ? req.query.category : "Food";
+  var amount = req.query.amount ? req.query.amount : 0;
+  var currency = req.query.currency ? req.query.currency : "Aud";
+  let requestJson = {
+    "Category": category,
+    "Amount": parseInt(amount),
+    "Currency": currency,
+  }
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Budgets');
+    cursor.findOne({"Category": category}, {$exists: true}, function(err, res){
+        if (!res) {
+          cursor.insertOne(requestJson);
+        } else {
+          console.log(res + " : responese\n")
+          cursor.findOneAndUpdate({"Category": category}, { $inc: {"Amount": parseInt(amount)} });
+        }
+    });
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Budgets');
+      cursor.findOne({"Category": category}, {$exists: true}, function(err, res){
+        console.log(res + " : responese\n")
+        if (!res) {
+          cursor.insertOne(requestJson);
+        } else {
+          cursor.findOneAndUpdate({"Category": category}, { $inc: {"Amount": parseInt(amount)} });
+        }
+    });
+    });
+  }
+  res.send("done");
+})
+
+
 function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;
 }
@@ -133,9 +195,7 @@ app.get('/spending', (req, res) => {
 app.get('/deletespending', (req, res) => {
   // http://localhost:3000/deletespending?id=5f8f8edaa315790067f562ed
   var id = req.query.id;
-  requestJson ={ 
-    "_id": new ObjectId(id)
-  }
+ 
   if (!id){res.send("id required")}
   if (client.isConnected()) {
     var cursor = client.db("PiggyFund").collection('Spendings');
