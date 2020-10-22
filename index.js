@@ -39,6 +39,38 @@ app.get('/getall', (req, res) => {
   };
 })
 
+function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
+}
+
+app.get('/getallcategory', (req, res) => {
+  let arr = [];
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Spendings').find();
+    cursor.each(function (err, item) {
+      if (item == null) {
+        res.send(arr.filter(onlyUnique));
+      }
+        if (item){
+          arr.push(item["Category"])
+        }
+    });
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Spendings').find();
+      cursor.each(function (err, item) {
+        if (item == null) {
+          res.send(arr.filter(onlyUnique));
+        }
+        if (item){
+          arr.push(item["Category"])
+        }
+      });
+    })
+  };
+})
+
+
 // collection.findOne({"_id": new ObjectId(id)}, function(err, doc) {
 
 
@@ -76,7 +108,6 @@ app.get('/spending', (req, res) => {
   var currency = req.query.currency ? req.query.currency : "Aud";
   var now = new Date();
   var isoString = req.query.time ? req.query.time : now.toISOString();
-  let arr = [];
   let requestJson = {
     "Category": category,
     "Amount": amount,
@@ -97,6 +128,26 @@ app.get('/spending', (req, res) => {
 })
 
 
+
+
+app.get('/deletespending', (req, res) => {
+  // http://localhost:3000/deletespending?id=5f8f8edaa315790067f562ed
+  var id = req.query.id;
+  requestJson ={ 
+    "_id": new ObjectId(id)
+  }
+  if (!id){res.send("id required")}
+  if (client.isConnected()) {
+    var cursor = client.db("PiggyFund").collection('Spendings');
+    cursor.remove({ _id: new ObjectId(id)});
+  } else {
+    client.connect(err => {
+      var cursor = client.db("PiggyFund").collection('Spendings');
+      cursor.remove({ _id: new ObjectId(id)});
+    });
+  }
+  res.send("done");
+})
 
 app.get('/updateuser', (req, res) => {
   // http://localhost:3000/spending?category=Clothes&amount=50
